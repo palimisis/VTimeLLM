@@ -17,8 +17,10 @@ MODEL_VERSION=vicuna-v1-5-7b
 gpu_vis=0 # per_device_train_batch_size * gradient_accumulation_steps * n_gpus = 128
 MASTER_PORT=29570
 
+export CUDA_VISIBLE_DEVICES=0
+export TRITON_CACHE_DIR=/path/to/non/nfs/directory
 
-deepspeed --include localhost:$gpu_vis --master_port $MASTER_PORT vtimellm/train/train_mem.py \
+deepspeed --include localhost:0 --master_port $MASTER_PORT vtimellm/train/train_mem.py \
     --deepspeed ./scripts/zero3.json \
     --model_name_or_path ./checkpoints/vicuna-7b-v1.5 \
     --version plain \
