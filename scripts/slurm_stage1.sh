@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=luke
+#SBATCH --partition=yoda
 #SBATCH --ntasks 1
 #SBATCH --gres=gpu:0
 #SBATCH --time=03:00:00
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=100GB
+#SBATCH --mem=64GB
 
 
 set -e
