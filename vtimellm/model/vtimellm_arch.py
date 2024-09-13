@@ -1,7 +1,10 @@
+from abc import ABC, abstractmethod
+
 import torch
 import torch.nn as nn
-from vtimellm.constants import IMAGE_TOKEN_INDEX, IGNORE_INDEX
-from abc import ABC, abstractmethod
+
+from vtimellm.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX
+
 
 class VTimeLLMMetaModel:
 

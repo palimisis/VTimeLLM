@@ -1,9 +1,18 @@
+from typing import List, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
-from typing import List, Optional, Tuple, Union
-from transformers import AutoConfig, AutoModelForCausalLM, LlamaConfig, LlamaModel, LlamaForCausalLM
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    LlamaConfig,
+    LlamaForCausalLM,
+    LlamaModel,
+)
 from transformers.modeling_outputs import CausalLMOutputWithPast
-from .vtimellm_arch import VTimeLLMMetaModel, VTimeLLMMetaForCausalLM
+
+from .vtimellm_arch import VTimeLLMMetaForCausalLM, VTimeLLMMetaModel
+
 
 class VTimeLLMConfig(LlamaConfig):
     model_type = "VTimeLLM"

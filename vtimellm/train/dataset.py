@@ -1,17 +1,19 @@
-import random
 import copy
 import json
+import random
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Sequence
+
+import numpy as np
 import torch
 import transformers
 from PIL import Image
-import numpy as np
 from torch.utils.data import Dataset
-from dataclasses import dataclass, field
-from typing import Dict, Optional, Sequence, List
 
-from vtimellm.constants import IGNORE_INDEX, IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN
 from vtimellm import conversation as conversation_lib
+from vtimellm.constants import DEFAULT_IMAGE_TOKEN, IGNORE_INDEX, IMAGE_TOKEN_INDEX
 from vtimellm.mm_utils import tokenizer_image_token
+
 
 @dataclass
 class DataArguments:

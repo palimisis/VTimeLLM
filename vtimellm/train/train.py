@@ -15,22 +15,24 @@
 #    limitations under the License.
 
 import os
+
 root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
-from dataclasses import dataclass, field
 import logging
 import pathlib
-from typing import Dict, Optional, Sequence, List
+import sys
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Sequence
 
 import torch
 import transformers
-import sys
+
 sys.path.append(root_dir)
 from vtimellm import conversation as conversation_lib
-from vtimellm.train.vtimellm_trainer import VTimeLLMTrainer
-from vtimellm.train.dataset import make_supervised_data_module, DataArguments
-from vtimellm.model import VTimeLLMLlamaForCausalLM, VTimeLLMChatGLMForCausalLM
-from vtimellm.model.builder import load_lora
 from vtimellm.mm_utils import print_trainable_parameters
+from vtimellm.model import VTimeLLMChatGLMForCausalLM, VTimeLLMLlamaForCausalLM
+from vtimellm.model.builder import load_lora
+from vtimellm.train.dataset import DataArguments, make_supervised_data_module
+from vtimellm.train.vtimellm_trainer import VTimeLLMTrainer
 
 local_rank = None
 
@@ -73,7 +75,7 @@ class TrainingArguments(transformers.TrainingArguments):
         default=16,
         metadata={"help": "How many bits to use."}
     )
-    lora_enable: bool = False
+    lora_enable: bool = True
     lora_r: int = 64
     lora_alpha: int = 16
     lora_dropout: float = 0.05
@@ -223,22 +225,40 @@ def train():
     compute_dtype = (torch.float16 if training_args.fp16 else (torch.bfloat16 if training_args.bf16 else torch.float32))
 
     bnb_model_from_pretrained_args = {}
+    # if training_args.bits in [4, 8]:
+    #     from transformers import BitsAndBytesConfig
+    #     bnb_model_from_pretrained_args.update(dict(
+    #         device_map={"": training_args.device},
+    #         load_in_4bit=training_args.bits == 4,
+    #         load_in_8bit=training_args.bits == 8,
+    #         quantization_config=BitsAndBytesConfig(
+    #             load_in_4bit=training_args.bits == 4,
+    #             load_in_8bit=training_args.bits == 8,
+    #             llm_int8_threshold=6.0,
+    #             llm_int8_has_fp16_weight=False,
+    #             bnb_4bit_compute_dtype=compute_dtype,
+    #             bnb_4bit_use_double_quant=training_args.double_quant,
+    #             bnb_4bit_quant_type=training_args.quant_type # {'fp4', 'nf4'}
+    #         )
+    #     ))
     if training_args.bits in [4, 8]:
         from transformers import BitsAndBytesConfig
-        bnb_model_from_pretrained_args.update(dict(
-            device_map={"": training_args.device},
+        bnb_config = BitsAndBytesConfig(
             load_in_4bit=training_args.bits == 4,
             load_in_8bit=training_args.bits == 8,
-            quantization_config=BitsAndBytesConfig(
-                load_in_4bit=training_args.bits == 4,
-                load_in_8bit=training_args.bits == 8,
-                llm_int8_threshold=6.0,
-                llm_int8_has_fp16_weight=False,
-                bnb_4bit_compute_dtype=compute_dtype,
-                bnb_4bit_use_double_quant=training_args.double_quant,
-                bnb_4bit_quant_type=training_args.quant_type # {'fp4', 'nf4'}
-            )
-        ))
+            llm_int8_threshold=6.0,
+            llm_int8_has_fp16_weight=False,
+            bnb_4bit_compute_dtype=compute_dtype,
+            bnb_4bit_use_double_quant=training_args.double_quant,
+            bnb_4bit_quant_type=training_args.quant_type
+        )
+        model = VTimeLLMLlamaForCausalLM.from_pretrained(
+            model_args.model_name_or_path,
+            cache_dir=training_args.cache_dir,
+            quantization_config=bnb_config,
+            device_map={"": training_args.device},
+        )
+
 
     if 'chatglm' in model_args.model_name_or_path:
         model = VTimeLLMChatGLMForCausalLM.from_pretrained(

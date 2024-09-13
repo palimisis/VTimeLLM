@@ -1,8 +1,8 @@
 import os
-import torch
-
-from transformers import Trainer
 from typing import Optional
+
+import torch
+from transformers import Trainer
 
 
 def maybe_zero_3(param, ignore_status=False, name=None):
